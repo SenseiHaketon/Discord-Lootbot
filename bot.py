@@ -10,36 +10,23 @@ default_channelname = 'Allgemein'
 
 client = commands.Bot(command_prefix = '!', intents=intents)
 client.channelref = None
-client.curses = ['']
-
 
 @client.event
 async def on_ready():
     print('Bot is ready.')
 
-def get_curses():
-    file = open("curses.txt", "r", encoding="utf-8")
-    client.curses = file.readlines()
+@client.command(hidden=True)
+async def load(ctx, extension):
+    client.load_extension(f'cogs.{extension}')
 
-@client.command()
-async def curse(ctx):
-    await ctx.send(get_random_curse())
+@client.command(hidden=True)
+async def unload(ctx, extension):
+    client.unload_extension(f'cogs.{extension}')
 
-def get_random_curse():
-    if(client.curses == None):
-        get_curses()   
-    if(len(client.curses) > 0):
-        return random.choice(client.curses)
-
-@client.command()
-async def addcurse(ctx, curse_to_add):
-    if(len(curse_to_add) > 0 and curse_to_add not in client.curses):
-        with open("curses.txt", "a", encoding="utf-8") as file:
-            file.write(f'\n{curse_to_add}')
-            get_curses()
-            await ctx.send(f"'{curse_to_add}' was added to my database!")
-    elif(curse_to_add in client.curses):
-        await ctx.send(f"'{curse_to_add}' already is in my database you {get_random_curse()}")
+@client.command(hidden=True)
+async def reload(ctx, extension):
+    client.unload_extension(f'cogs.{extension}')
+    client.load_extension(f'cogs.{extension}')
 
 @client.command(aliases=['channel'])
 async def _channel(ctx, channelname=''):
@@ -47,10 +34,10 @@ async def _channel(ctx, channelname=''):
     if(channelname == ''):
         if(client.channelref != None):
             print(client.channelref.id)
-            await ctx.send(f"Current channel: '{client.channelref}'")
+            await ctx.send(f"Current channel: **{client.channelref}**")
         else:
             print('No channel was set!')
-            await ctx.send("No channel was set! Running this command with '[channelname]' as parameter sets the current channel.")
+            await ctx.send("No channel was set! Running this command with '*[channelname]*' as parameter sets the current channel.")
     else:
         await set_channel(ctx, channelname)
         
@@ -59,10 +46,10 @@ async def set_channel(ctx, channelname): # Make this work with text channels too
     if(new_channel != None):
         client.channelref = new_channel           
         print(f'New voice channel: {client.channelref.name} ({client.channelref.id})')
-        await ctx.send(f"New channel set to '{channelname}'!")
+        await ctx.send(f"New channel set to *{channelname}*!")
     else:
         print(f'Voice channel {channelname} not found!')
-        await ctx.send(f"Channel '{channelname}' not found!")        
+        await ctx.send(f"Channel *{channelname}* not found!")        
 
 def get_channel(ctx, channelname):
     for channel in ctx.guild.voice_channels:
@@ -85,7 +72,7 @@ async def roll(ctx, channelname=''):
         await roll_over_members(ctx, channel_to_roll.members)          
     else:
         print('Failed to find default channel! Aborting Roll command...')
-        await ctx.send(f"Error: Channel was not set correctly. Try using '!channel [channel name]' command!")
+        await ctx.send(f"**Error:** Channel was not set correctly. Try using '!channel [channel name]' command!")
 
 @client.command()
 async def rollall(ctx):    
@@ -96,5 +83,8 @@ async def roll_over_members(ctx, members):
     print(f'User {selected_member} won the roll!')
     await ctx.send(selected_member.mention + ' won!')
 
-get_curses()
+for filename in os.listdir('./cogs'):
+    if filename.endswith('.py'):
+        client.load_extension(f'cogs.{filename[:-3]}') # removes '.py' (last three chars) from the end
+
 client.run(os.environ.get('token-lootbot', None))
