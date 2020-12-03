@@ -97,5 +97,4 @@ async def roll_over_members(ctx, members):
     await ctx.send(selected_member.mention + ' won!')
 
 get_curses()
-#client.run('NzgzNjg3MjcyODcyNDExMTU2.X8eXpg.nVq9z8HhuNXXUEg3Dzd0EYPoj84')
 client.run(os.environ.get('token', None))
